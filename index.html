@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sainik Cinema Seat Booking</title>
+    <style>
+        body { font-family: Arial; background-color: #1e1e24; color: white; text-align: center; }
+        .container { margin: 20px auto; max-width: 900px; }
+        
+        .filter-panel { background: #2e2e38; padding: 15px; border-radius: 8px; margin-bottom: 25px; display: flex; justify-content: center; gap: 20px; align-items: center; border: 1px solid #444;}
+        .filter-panel select, .filter-panel input { padding: 8px; border-radius: 5px; border: none; font-weight: bold;}
+        .btn-view { background: #ffcc00; color: black; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer;}
+
+        .screen { background-color: #fff; height: 20px; width: 65%; margin: 20px auto 45px auto; box-shadow: 0 3px 20px rgba(255,255,255,0.7); border-bottom-left-radius: 50%; border-bottom-right-radius: 50%; color: #000; font-size: 12px; font-weight: bold; line-height: 20px; }
+        .row-container { display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+        .row-label { width: 130px; text-align: left; font-size: 13px; font-weight: bold; }
+        .seats-grid { display: grid; grid-template-columns: repeat(14, 35px); gap: 6px; }
+        .seat-btn { width: 35px; height: 35px; border: none; border-radius: 5px; cursor: pointer; font-size: 11px; font-weight: bold; }
+        
+        /* Badle hue naamein aur Fauji/Elegant Colors */
+        .OFFRs { background-color: #ffcc00; color: black; }  /* Gold for Officers */
+        .JCOs { background-color: #00bcd4; color: white; }   /* Cyan for JCOs */
+        .ORs { background-color: #4caf50; color: white; }    /* Olive Green type for ORs */
+        .booked { background-color: #444444 !important; color: #888 !important; cursor: not-allowed; }
+        
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #2e2e38; padding: 25px; border-radius: 10px; box-shadow: 0px 0px 15px rgba(0,0,0,0.5); z-index: 10; width: 320px; text-align: left;}
+        .modal input { width: 100%; padding: 8px; margin: 8px 0 15px 0; border-radius: 5px; border: none; box-sizing: border-box;}
+        .modal button { width: 48%; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;}
+        .btn-submit { background-color: #4caf50; color: white; }
+        .btn-cancel { background-color: #f44336; color: white; float: right; }
+        .overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:5; }
+        
+        .legend { margin-top: 40px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+        .legend-item { display: flex; align-items: center; gap: 5px; font-size: 14px;}
+        .box { width: 20px; height: 20px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>MANEKSHAW AUDITORIUM SEAT BOOKING</h1>
+
+        <form method="GET" action="/" class="filter-panel">
+            <label>Date:</label>
+            <input type="date" name="date" id="viewDate" value="{{ sel_date }}">
+            
+            <label>Show Time:</label>
+            <select name="time">
+                <option value="12:00 PM (Morning Show)" {% if sel_time == '12:00 PM (Morning Show)' %}selected{% endif %}>12:00 PM (Morning Show)</option>
+                <option value="03:30 PM (Matinee Show)" {% if sel_time == '03:30 PM (Matinee Show)' %}selected{% endif %}>03:30 PM (Matinee Show)</option>
+                <option value="07:00 PM (First Show)" {% if sel_time == '07:00 PM (First Show)' %}selected{% endif %}>07:00 PM (First Show)</option>
+                <option value="10:30 PM (Night Show)" {% if sel_time == '10:30 PM (Night Show)' %}selected{% endif %}>10:30 PM (Night Show)</option>
+            </select>
+            <button type="submit" class="btn-view">Check Layout</button>
+        </form>
+        
+        <div class="screen">SCREEN THIS WAY</div>
+
+        <div class="theater-layout">
+            {% for row_num, row_info in theater.items()|sort(reverse=True) %}
+                <div class="row-container">
+                    <div class="row-label">Row {{ row_num }} ({{ row_info.category }})</div>
+                    <div class="seats-grid">
+                        {% for seat_num, details in row_info.seats.items() %}
+                            {% if details.status == 'available' %}
+                                <button type="button" class="seat-btn {{ row_info.category }}" onclick="openBookingForm({{ row_num }}, {{ seat_num }}, '{{ row_info.category }}')">{{ seat_num }}</button>
+                            {% else %}
+                                <button type="button" class="seat-btn booked" title="Booked by {{ details.details.booked_by }}" disabled>{{ seat_num }}</button>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="legend">
+            <div class="legend-item"><div class="box OFFRs"></div> OFFRs (Rows 1-5)</div>
+            <div class="legend-item"><div class="box JCOs"></div> JCOs (Rows 6-10)</div>
+            <div class="legend-item"><div class="box ORs"></div> ORs (Rows 11-25)</div>
+            <div class="legend-item"><div class="box booked"></div> Booked</div>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay" onclick="closeBookingForm()"></div>
+    <div class="modal" id="bookingModal">
+        <h3 id="formTitle">Book Pass</h3>
+        <form action="/book" method="POST">
+            <input type="hidden" id="formRow" name="row">
+            <input type="hidden" id="formSeat" name="seat">
+            <input type="hidden" id="formDate" name="booking_date">
+            <input type="hidden" id="formTime" name="show_time">
+            
+            <p style="color: #ffcc00; margin-top: -5px; font-size: 14px;">
+                📅 <span id="displayDate"></span> | ⏰ <span id="displayTime"></span>
+            </p>
+
+            <label>Name/Rank:</label>
+            <input type="text" name="customer_name" required placeholder="Rank & Full Name">
+            
+            <label>Service Number / Mobile:</label>
+            <input type="tel" name="customer_phone" required placeholder="Enter 10-digit number/ID">
+            
+            <button type="submit" class="btn-submit">Confirm Pass</button>
+            <button type="button" class="btn-cancel" onclick="closeBookingForm()">Cancel</button>
+        </form>
+    </div>
+
+    <script>
+        let today = new Date().toISOString().split('T')[0];
+        document.getElementById('viewDate').min = today;
+
+        function openBookingForm(row, seat, category) {
+            let curDate = document.getElementById('viewDate').value;
+            let curTime = document.querySelector('select[name="time"]').value;
+
+            document.getElementById('formRow').value = row;
+            document.getElementById('formSeat').value = seat;
+            document.getElementById('formDate').value = curDate;
+            document.getElementById('formTime').value = curTime;
+
+            document.getElementById('displayDate').innerText = curDate;
+            document.getElementById('displayTime').innerText = curTime.split(' ')[0];
+            document.getElementById('formTitle').innerText = "Booking Row " + row + ", Seat " + seat + " (" + category + ")";
+            
+            document.getElementById('bookingModal').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+        }
+        
+        function closeBookingForm() {
+            document.getElementById('bookingModal').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

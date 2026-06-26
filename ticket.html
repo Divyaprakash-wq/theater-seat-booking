@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sainik Cinema Pass</title>
+    <style>
+        body { font-family: 'Arial', sans-serif; background-color: #1e1e24; color: white; padding-top: 30px; }
+        
+        /* Buttons Styling */
+        .navigation-area {
+            margin-bottom: 20px;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .btn-home { 
+            background: #ffcc00; 
+            color: black; 
+            border: none; 
+            padding: 12px 22px; 
+            border-radius: 5px; 
+            text-decoration: none; 
+            font-weight: bold; 
+            display: inline-block; 
+            cursor: pointer;
+            font-size: 15px;
+        }
+        .btn-print {
+            background: #ffffff; 
+            color: black; 
+            border: none; 
+            padding: 12px 22px; 
+            border-radius: 5px; 
+            font-weight: bold; 
+            display: inline-block; 
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 15px;
+        }
+        /* Normal SMS Button Styling */
+        .btn-sms {
+            background: #007aff; /* Standard SMS Blue color */
+            color: white; 
+            border: none; 
+            padding: 12px 22px; 
+            border-radius: 5px; 
+            font-weight: bold; 
+            display: inline-block; 
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 15px;
+        }
+
+        /* Ticket Card Design */
+        .ticket-card {
+            background: linear-gradient(135deg, #2b5876, #4e4376);
+            max-width: 450px;
+            margin: 0 auto;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            overflow: hidden;
+            border: 2px dashed #ffcc00;
+        }
+        .ticket-header { background: #ffcc00; color: black; padding: 15px; font-weight: bold; font-size: 20px; letter-spacing: 2px; text-align: center; }
+        .ticket-body { padding: 25px; text-align: left; line-height: 1.8; }
+        .ticket-id { font-size: 22px; color: #ffcc00; font-weight: bold; border: 1px solid #ffcc00; padding: 5px 10px; display: inline-block; border-radius: 5px; margin-bottom: 15px; }
+        .info-row { display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;}
+        .label { color: #ccc; font-size: 14px; }
+        .value { font-weight: bold; font-size: 16px; }
+        
+        @media print {
+            body { background: white; color: black; padding-top: 0; }
+            .navigation-area { display: none; } 
+            .ticket-card { border: 2px solid black; box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Buttons Section (Ab isme Normal SMS option hai) -->
+    <div class="navigation-area">
+        <a href="/" class="btn-home">⬅️ Back to Layout</a>
+        
+        <!-- Normal SMS bhejne ka system standard format me -->
+        <a href="sms:+91{{ info.phone }}?body=SAINIK%20CINEMA%20PASS%0A%0APass%20ID:%20{{ info.ticket_id }}%0AName:%20{{ info.booked_by }}%0ADate:%20{{ info.booking_date }}%0ATime:%20{{ info.show_time }}%0ACategory:%20{{ category }}%0ASeat:%20Row%20{{ row }},%20Seat%20{{ seat }}%0A%0AStatus:%20APPROVED" 
+           class="btn-sms">
+           💬 Send Normal SMS
+        </a>
+
+        <button class="btn-print" onclick="window.print()">🖨️ Print Pass</button>
+    </div>
+
+    <!-- Ticket Pass Section -->
+    <div class="ticket-card">
+        <div class="ticket-header">
+            🎖️ OFFICIAL CINEMA PASS 🎖️
+        </div>
+        <div class="ticket-body">
+            <center>
+                <div class="label">PASS ID</div>
+                <div class="ticket-id">{{ info.ticket_id }}</div>
+            </center>
+            
+            <div class="info-row">
+                <span class="label">Rank & Name:</span>
+                <span class="value">{{ info.booked_by }}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Service No / Contact:</span>
+                <span class="value">{{ info.phone }}</span>
+            </div>
+            
+            <div class="info-row" style="background: rgba(255,255,255,0.05); padding: 5px; border-radius: 4px;">
+                <span class="label" style="color: #fff;">Show Date:</span>
+                <span class="value" style="color: #ffcc00;">{{ info.booking_date }}</span>
+            </div>
+            <div class="info-row" style="background: rgba(255,255,255,0.05); padding: 5px; border-radius: 4px;">
+                <span class="label" style="color: #fff;">Show Time:</span>
+                <span class="value" style="color: #ffcc00;">{{ info.show_time }}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="label">Category / Entitlement:</span>
+                <span class="value" style="color: #ffcc00; font-size: 18px;">{{ category }}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Seat Location:</span>
+                <span class="value">Row {{ row }}, Seat {{ seat }}</span>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
